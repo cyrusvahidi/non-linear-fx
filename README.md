@@ -5,7 +5,7 @@ Implementation of Modelling non-linear audio effects with end-to-end deep learni
 `Python 3.6.6`
 `CUDNN`
 
-### `bash config`
+## bash config
 For a consisent environment configuration, add the following to your `~/.bashrc` on the GPU server
 
 ```
@@ -21,5 +21,5 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 Essentially, this loads the cudnn library for tensorflow / torch and declares available GPUs for use.
 
-### python virtual environment
+## python virtual environment
 Instructions coming soon for how to create a python virtual environment and which python packages to install.
