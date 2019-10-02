@@ -6,7 +6,7 @@ Implementation of Modelling non-linear audio effects with end-to-end deep learni
 `CUDNN`
 
 ## bash config
-For a consisent environment configuration, add the following to your `~/.bashrc` on the GPU server
+For a consisent environment configuration, add the following to your `~/.bashrc` on the GPU server and run the command `source ~/.bashrc`.
 
 ```
 module load python/3.6.6
