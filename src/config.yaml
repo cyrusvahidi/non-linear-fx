@@ -1,0 +1,13 @@
+data_path: '/import/c4dm-04/cv/fxdataset/'
+data:
+  frame_sz: 1024
+  hop: 64
+  mono: True
+  fs: 16000
+  suffix: '.wav'
+  separator: '-'
+train:
+  lr: 0.01
+  batch: 32
+  iterations: 1000
+
