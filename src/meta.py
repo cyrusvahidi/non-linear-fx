@@ -11,11 +11,24 @@ suffix = params_data['suffix']
 
 path_root = params['data_path']
 
+BASS = 'bass'
+GUITAR = 'guitar'
+
+NO_FX = 'nofx'
+DISTORTION = 'distortion'
+OVERDRIVE = 'overdrive'
+
+fx_param_ids = ['1', '2', '3'] # identifiers for the parameter settings
+
 params_path = {
-    'bass_nofx': os.path.join(path_root, 'bass/NoFX/'),
-    'bass_distortion': os.path.join(path_root, 'bass/Distortion/'),
-    'bass_overdrive': os.path.join(path_root, 'bass/Overdrive/'),
-    'guitar_nofx': os.path.join(path_root, 'guitar/NoFX/'),
-    'guitar_distortion': os.path.join(path_root, 'guitar/Distortion/'),
-    'guitar_overdrive': os.path.join(path_root, 'guitar/Overdrive/')
+    BASS: {
+        NO_FX: os.path.join(path_root, 'bass/NoFX/'), 
+        DISTORTION: os.path.join(path_root, 'bass/Distortion/'), 
+        OVERDRIVE: os.path.join(path_root, 'bass/Overdrive/')
+    },
+    GUITAR: {
+        NO_FX: os.path.join(path_root, 'guitar/NoFX/'),
+        DISTORTION: os.path.join(path_root, 'guitar/Distortion/'), 
+        OVERDRIVE: os.path.join(path_root, 'guitar/Overdrive/')
+    }
 }
