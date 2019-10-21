@@ -4,8 +4,9 @@ import os
 
 import meta
 
-def load_audio(path, data_params):
-    audio, _ = librosa.load(path, sr=data_params['fs'], mono=data_params['mono'])
+def load_audio(path):
+    print('loading: {0}'.format(path))
+    audio, _ = librosa.load(path, sr=meta.params_data['fs'], mono=meta.params_data['mono'])
 
     audio = audio.T
     audio = np.reshape(audio, [-1, 1])
