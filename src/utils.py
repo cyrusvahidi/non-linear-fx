@@ -4,8 +4,11 @@ import os
 
 import meta
 
-def load_audio(path):
-    print('loading: {0}'.format(path))
+def load_audio(path, idx=None, total=None, fx=None):
+    if idx and total and fx:
+        print('loading {0} / {1}: {3} {2}'.format(idx + 1, total, path, fx))
+    else:
+        print('loading {0}'.format(path))
     audio, _ = librosa.load(path, sr=meta.params_data['fs'], mono=meta.params_data['mono'])
 
     audio = audio.T

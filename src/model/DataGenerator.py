@@ -1,56 +1,35 @@
-import torch
-from torch.utils.data import (
-    Dataset, DataLoader as DataLoaderBase
-) 
+from sklearn.preprocessing import StandardScaler
+from tensorflow.keras.utils import Sequence
 
 import numpy as np
 
 from os import listdir
 from os.path import join
 
-class DataLoader(DataLoaderBase):
-    def __init__(self, dataset, batch_size, frame_sz, hop_sz, *args, **kwargs):
-        super().__init__(dataset, batch_size, *args, **kwargs)
-        self.frame_sz = frame_sz
-        self.hop_sz = hop_sz
-
-    def __iter__(self):
-        for batch in super().__iter__():
-            (batch_size, n_samples) = batch.size()
-
-            reset = True
-
-            for seq_begin in range(self.overlap_len, n_samples, self.frame_sz):
-                from_index = seq_begin - self.overlap_len
-                to_index = seq_begin + self.seq_len
-                sequences = batch[:, from_index : to_index]
-                input_sequences = sequences[:, : -1]
-                target_sequences = sequences[:, self.overlap_len :].contiguous()
-
-                yield (input_sequences, reset, target_sequences)
-
-                reset = False
-
-    def __len__(self):
-        raise NotImplementedError()
-
-class DataGenerator(Dataset):
-    def __init__(self, dataset, batch_size, frame_size, hop_size):
+class DataGenerator(Sequence):
+    def __init__(self, dataset, batch_size, frame_size, hop_size, unsupervised=False):
         self.dataset = dataset
         self.batch_size = batch_size
         self.frame_size = frame_size
+        self.hop_size = hop_size
+        self.unsupervised = unsupervised
         
         self.get_input_target_frames()
+        
+        self.on_epoch_end()
     
     def __getitem__(self, idx):
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
-        
+        indexes = self.indexes[idx * self.batch_size:(idx + 1) * self.batch_size]
+ 
         return self.input_frames[idx], self.target_frames[idx]
-        
-    def __len__(self):
-        return self.n_frames_total
     
+    def __len__(self):
+        return self.n_iterations
+    
+    def on_epoch_end(self):
+        # shuffle data between epochs
+        self.indexes = np.random.permutation(self.n_frames_total)
+        
     def get_input_target_frames(self):
         # load the audio
         # count the frames
@@ -64,7 +43,7 @@ class DataGenerator(Dataset):
         self.n_frames_total = self.nb_inst_cum[-1]
 
         # how many batches can we fit in the set
-        self.nb_iterations = int(np.floor(self.n_frames_total / self.batch_size))
+        self.n_iterations = int(np.floor(self.n_frames_total / self.batch_size))
         
         self.input_frames = np.zeros((self.n_frames_total, self.frame_size, 1), dtype=self.floatx)
         self.target_frames = np.zeros((self.n_frames_total, self.frame_size, 1), dtype=self.floatx)
@@ -82,7 +61,10 @@ class DataGenerator(Dataset):
         idx_end = self.nb_inst_cum[idx + 1] # end for current clip
         
         input_clip = self.dataset[idx][0]
-        target_clip = self.dataset[idx][1]
+        if self.unsupervised:
+            target_clip = input_clip
+        else:
+            target_clip = self.dataset[idx][1]
         
         idx = 0    # index to start placing frames in self.input_frames and self.target_frames
         start = 0  # start frame within input and target clips
@@ -98,5 +80,5 @@ class DataGenerator(Dataset):
     def get_num_frames_per_clip(self, audio_clip):
         # get the number of frames for given clip
         n_samples = audio_clip.shape[0]
-        return np.maximum(1, int(np.ceil(n_samples - params_data['frame_size']) / params_data['hop_size']))
+        return np.maximum(1, int(np.ceil(n_samples - self.frame_size) / self.hop_size))
         
