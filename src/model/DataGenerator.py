@@ -68,9 +68,6 @@ class DataGenerator(Sequence):
         idx_start = self.nb_inst_cum[idx]   # start for current clip
         idx_end = self.nb_inst_cum[idx + 1] # end for current clip
         
-        print('index {0}'.format(idx))
-        print('index start {0}'.format(idx_start))
-        
         input_clip = self.dataset[idx][0]
         if self.unsupervised:
             target_clip = input_clip

@@ -131,9 +131,9 @@ class NonLinearFXModel():
         x = Dense(128,
               kernel_initializer='random_uniform',
               kernel_regularizer=l2(1e-3),
+              activation='tanh',
               name='saaf-fc4')(x)
-#         x = ELU()(x) # TODO: locally connected SAAF activation
-        x = SAAF()(x)
+#         x = SAAF()(x) # TODO: locally connected SAAF activation
 
         if self.dropout:
             x = Dropout(self.dropout_rate)(x)

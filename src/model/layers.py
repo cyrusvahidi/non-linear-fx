@@ -199,8 +199,8 @@ class SAAF(Layer):
             sigma1 = K.variable(np.zeros((self.batch, frame.shape[1], frame.shape[2])))
             for j in range(self.v_order):
                 j_fact = math.factorial(j)
-                p = tf.math.divide(K.pow(frame, j), j_fact)
-                sigma1 = tf.math.add(sigma1, tf.math.multiply(self.v[i][j], p))
+                p = tfm.divide(K.pow(frame, j), j_fact)
+                sigma1 = tfm.add(sigma1, tfm.multiply(self.v[i][j], p))
 
             sigma2 = K.variable(np.zeros((self.batch, frame.shape[1], frame.shape[2])))
             for j in range(1, self.w_order + 1):
@@ -216,26 +216,32 @@ class SAAF(Layer):
         return input_shape
     
     def basis2(self, x):
-        b_2_k = K.variable(np.zeros(self.batch,))
+#         b_2_k = K.variable(np.zeros(x.shape[0], ))
         
         k_1 = tf.constant(self.breakpoints[self.k - 1], dtype=tf.float32)
+#         print(k_1.shape)
         k = tf.constant(self.breakpoints[self.k], dtype=tf.float32)
         
         def f1(): 
-            return tfm.add(b_2_k, tfm.add(tfm.subtract(tfm.divide(K.multiply(x, x), 2), K.multiply(k_1, x)), 
-                                          tfm.divide(K.multiply(k_1, k), 2)))
+            return tfm.add(tfm.subtract(tfm.divide(tfm.multiply(x, x), 2), tfm.multiply(k_1, x)), 
+                                          tfm.divide(tfm.multiply(k_1, k_1), 2))
         def f2(): 
-            val1 = tfm.divide(K.multiply(tfm.subtract(k, k_1), tfm.subtract(k, k_1)), 2)
-            val2 = K.multiply(tfm.subtract(k, k_1), tfm.subtract(x, k))
+            val1 = tfm.divide(tfm.multiply(tfm.subtract(k, k_1), tfm.subtract(k, k_1)), 2)
+            val2 = tfm.multiply(tfm.subtract(k, k_1), tfm.subtract(x, k))
             val = tfm.add(val1, val2)
-            return tfm.add(b_2_k, val)
-        b_2_k = tf.cond(tfm.logical_and(tfm.greater(x, k_1), tfm.less(x, k)), lambda: f1(), lambda: f2())
+            return val
         
+        b2ks = [0] * x.shape[0]
+        for i in range(x.shape[0]):
+            b2ks[i] = tf.cond(tfm.logical_and(tfm.greater(x[i, 0], k_1), tfm.less(x[i, 0], k)), lambda: f1(), lambda: f2())
+            print(b2ks[i].shape)
+        
+        b_2_k = K.concatenate(b2ks)
 #         if tfm.greater(x, k_1) and tfm.less(x, k):
 
 #         elif tfm.less(k, x):
         
-        return tfm.multiply(self.w[self.i, self.k - 1], b_2_k)
+        return tfm.multiply(self.w[self.i][self.k - 1], b_2_k)
     
 class DenseLocal(Layer):
     def __init__(self, units=64, n_kernels=128, activation='softplus',
@@ -301,7 +307,6 @@ class DenseLocal(Layer):
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0], input_shape[1], input_shape[2])
-
 
 def normalize_tuple(value, n, name):
     """Transforms a single int or iterable of ints into an int tuple.
