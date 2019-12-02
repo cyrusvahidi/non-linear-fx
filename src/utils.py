@@ -10,7 +10,7 @@ def load_audio(path, idx=None, total=None, fx=None):
     else:
         print('loading {0}'.format(path))
     audio, _ = librosa.load(path, sr=meta.params_data['fs'], mono=meta.params_data['mono'])
-
+    audio, _ = librosa.effects.trim(audio) # remove leading and trailing silences
     audio = audio.T
     audio = np.reshape(audio, [-1, 1])
     return audio

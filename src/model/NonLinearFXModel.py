@@ -3,7 +3,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras import backend as K
 from tensorflow.keras.regularizers import l2 
 
-from model.layers import DePool1D, Deconvolution1D
+from model.layers import DePool1D, Deconvolution1D, Conv1DLocal, DenseLocal, SAAF
 
 import tensorflow as tf
 
@@ -29,14 +29,14 @@ class NonLinearFXModel():
                    padding='same',
                    kernel_initializer='random_uniform',
                    name='conv1')
-        self.w2 = [0] * 128
+#         self.w2 = [0] * 128
         self.dense_local = [0] * 128
     
         for i in range(128):
-            self.w2[i] = Conv1D(filters=1, kernel_size=128,
-                   activation='softplus',
-                   kernel_initializer='random_uniform',
-                   name='conv2-{0}'.format(i))
+#             self.w2[i] = Conv1D(filters=1, kernel_size=128,
+#                    activation='softplus',
+#                    kernel_initializer='random_uniform',
+#                    name='conv2-{0}'.format(i))
             
             self.dense_local[i] = Dense(64,
                    kernel_initializer='random_uniform',
@@ -48,7 +48,7 @@ class NonLinearFXModel():
         self.mp = MaxPool1D(pool_size=16, name='max_pool')
         
         z = self.frontend(x)
-        z = self.latent_dnn(z)
+#         z = self.latent_dnn(z)
         y = self.backend(z)
         
         self.model = Model(inputs=x, outputs=y)
@@ -62,14 +62,15 @@ class NonLinearFXModel():
         x = Lambda(lambda t: K.abs(t), name="abs_activation")(x1)
 
         # L2 LOCALLY CONNECTED, 128 x 128 filters, softplus activation
-        x = ZeroPadding1D((64,63))(x)
-        X2 = [0] * 128
-        for i in range(128):
-            activ = Lambda(lambda x: x[:,:,i:i+1], output_shape=(self.params_train.get('batch_size'), 1151, 1))(x) 
-            X2[i] = self.w2[i](activ) 
-        X2 = Concatenate(axis=2)(X2)
+#         x = ZeroPadding1D((64,63))(x)
+#         X2 = [0] * 128
+#         for i in range(128):
+#             activ = Lambda(lambda x: x[:,:,i:i+1], output_shape=(self.params_train.get('batch_size'), 1151, 1))(x) 
+#             X2[i] = self.w2[i](activ) 
+#         X2 = Concatenate(axis=2)(X2)
+        x = Conv1DLocal()(x)
         
-        x = BatchNormalization()(X2)
+        x = BatchNormalization()(x)
         x = self.mp(x) # apply max pooling layer
         
         return x
@@ -83,6 +84,7 @@ class NonLinearFXModel():
 
         x = self.dnn_saaf(x)
 
+        # DECONVOLUTION
         x = ZeroPadding1D((32, 31))(x) # zero pad the time series before doing 1d convolution
 #         y = Deconvolution1D(self.w1)(x)
         x = Permute((2, 1), input_shape=(1024, 128))(x)
@@ -130,7 +132,8 @@ class NonLinearFXModel():
               kernel_initializer='random_uniform',
               kernel_regularizer=l2(1e-3),
               name='saaf-fc4')(x)
-        x = ELU()(x) # TODO: locally connected SAAF activation
+#         x = ELU()(x) # TODO: locally connected SAAF activation
+        x = SAAF()(x)
 
         if self.dropout:
             x = Dropout(self.dropout_rate)(x)
@@ -139,11 +142,12 @@ class NonLinearFXModel():
 
     def latent_dnn(self, z):
         z = Permute((2, 1), input_shape=(64, 128))(z)
-        Z = [0] * 128
-        for i in range(128):
-            activ = Lambda(lambda x: x[:,i:i+1,:], output_shape=(self.params_train.get('batch_size'), 1, 64))(z) 
-            Z[i] = self.dense_local[i](activ) 
-        Z = Concatenate(axis=1)(Z)
+#         Z = [0] * 128
+#         for i in range(128):
+#             activ = Lambda(lambda x: x[:,i:i+1,:], output_shape=(self.params_train.get('batch_size'), 1, 64))(z) 
+#             Z[i] = self.dense_local[i](activ) 
+#           Z = Concatenate(axis=1)(Z)
+        Z = DenseLocal()(z)
         if self.dropout:
             Z = Dropout(self.dropout_rate)(Z)
             

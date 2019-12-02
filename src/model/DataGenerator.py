@@ -7,13 +7,14 @@ from os import listdir
 from os.path import join
 
 class DataGenerator(Sequence):
-    def __init__(self, dataset, floatx, batch_size, frame_size, hop_size, unsupervised=False):
+    def __init__(self, dataset, floatx, batch_size, frame_size, hop_size, unsupervised=False, train=True):
         self.dataset      = dataset
         self.floatx       = floatx
         self.batch_size   = batch_size
         self.frame_size   = frame_size
         self.hop_size     = hop_size
         self.unsupervised = unsupervised
+        self.train = train
         
         self.get_input_target_frames()
         
@@ -25,6 +26,7 @@ class DataGenerator(Sequence):
         return self.input_frames[indexes], self.target_frames[indexes]
     
     def __len__(self):
+#         return self.n_iterations
         return self.n_iterations
     
     def on_epoch_end(self):
@@ -42,15 +44,20 @@ class DataGenerator(Sequence):
         self.n_clips = len(self.dataset)
         
         self.n_frames_total = self.nb_inst_cum[-1]
-
+        
         # how many batches can we fit in the set
-        self.n_iterations = int(np.floor(self.n_frames_total / self.batch_size))
+        if self.train:
+            self.n_iterations = 1000
+        else:
+            self.n_iterations = int(np.floor(self.n_frames_total / self.batch_size))
         
         self.input_frames = np.zeros((self.n_frames_total, self.frame_size, 1), dtype=self.floatx)
         self.target_frames = np.zeros((self.n_frames_total, self.frame_size, 1), dtype=self.floatx)
         
         for idx in range(self.n_clips):
             self.get_clip_to_frames(idx)
+        
+        print('Loaded {0} frames'.format(self.n_frames_total))
         
     def get_clip_to_frames(self, idx):
         """ slice the specified clip index into frames
@@ -60,6 +67,9 @@ class DataGenerator(Sequence):
         # indexes that the frames will be stored between for given clips in self.input_frames and self.target_frames
         idx_start = self.nb_inst_cum[idx]   # start for current clip
         idx_end = self.nb_inst_cum[idx + 1] # end for current clip
+        
+        print('index {0}'.format(idx))
+        print('index start {0}'.format(idx_start))
         
         input_clip = self.dataset[idx][0]
         if self.unsupervised:
