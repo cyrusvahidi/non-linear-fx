@@ -12,15 +12,25 @@ from tensorflow.keras import backend as K
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
+import pandas as pd
+
 from sklearn.model_selection import train_test_split
 
-def train(instrument, fx, param_setting, dropout):
+def train(instrument, fx, param_setting, dropout, out_path):
     config = tf.ConfigProto( device_count = {'GPU': 1 , 'CPU': 56} ) 
     sess = tf.Session(config=config) 
     K.set_session(sess)
 
     input_target_file_pairs = get_input_target_fname_pairs(instrument, fx, param_setting)
-
+    
+    # partition and save test data
+    input_target_file_pairs, test_file_pairs = train_test_split(input_target_file_pairs,
+                                           test_size=params_train.get('test_split'),
+                                           random_state=42)
+    df = pd.DataFrame(test_file_pairs, columns =['input_file', 'target_file']) 
+    df.to_csv(os.path.join(out_path, 'test_data.csv'))
+#     import pdb; pdb.set_trace()
+    
     ## PUT AUDIO Loading into a function - do it in data_loader?
     n_total_clips = len(input_target_file_pairs)
     input_target_pairs =  [0] * n_total_clips
@@ -71,12 +81,11 @@ def train(instrument, fx, param_setting, dropout):
     print('Time elapsed for the job: %7.2f hours' % ((end - start) / 3600.0))
     print('\n====================================================================================================\n')
 
-    path = '/import/c4dm-04/cv/models/unsupervised1/'
-
-    model.save_weights(os.path.join(path, 'model.h5'))
+    model.save_weights(os.path.join(out_path, 'unsupervised_model.h5'))
 
     # Save the model architecture
-    with open(os.path.join(path, 'model.json'), 'w') as f:
+    with open(os.path.join(path, 'unsupervised_model.json'), 'w') as f:
         f.write(model.to_json())
 
-train(instrument=GUITAR, fx=DISTORTION, param_setting=fx_param_ids[0], dropout=True)
+out_path = '/import/c4dm-04/cv/models/guitar_distortion_1_2/'
+train(instrument=GUITAR, fx=DISTORTION, param_setting=fx_param_ids[0], dropout=True, out_path)
