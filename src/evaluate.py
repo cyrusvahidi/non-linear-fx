@@ -7,6 +7,8 @@ import os
 from meta import *
 from utils import load_audio
 
+from model.DataGenerator import DataGenerator
+
 def load_test_data(model_path, instrument, fx):
     test_df = pd.read_csv(os.path.join(model_path, 'test_data.csv'))
     n_total_clips = test_df.shape[0]
@@ -113,3 +115,17 @@ def get_plot(inputWave, targetWave, outputWave, fs, plotName):
     plt.tight_layout()
     plt.show()
     return
+
+
+
+# SCRIPT
+model_path = '/import/c4dm-04/cv/models/guitar_distortion_1_2/'
+dropout = True # True if model_path ends in 2, else False
+
+# Generate input target frame pairs
+input_target_pairs = load_test_data(model_path, GUITAR, DISTORTION)
+data_gen = DataGenerator(input_target_pairs, floatx=np.float32, batch_size=params_train['batch'], frame_size=params_data['frame_size'], hop_size=params_data['hop_size'], unsupervised=False)
+input_frames, target_frames = data_gen.get_frames()
+
+model = load_model(model_path, dropout=dropout)
+preds = model.predict(input_frames)
