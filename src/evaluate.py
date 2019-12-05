@@ -2,6 +2,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.fftpack import fft 
 from scipy import signal
+
+import os
+from meta import *
+from utils import load_audio
+
+def load_test_data(model_path, instrument, fx):
+    test_df = pd.read_csv(os.path.join(model_path, 'test_data.csv'))
+    n_total_clips = test_df.shape[0]
+    input_target_pairs =  [0] * n_total_clips
+    for idx, row in test_df.iterrows():
+        audio_in = load_audio(os.path.join(params_path[instrument][NO_FX], row['input_file']), idx, n_total_clips, NO_FX)
+        audio_target = load_audio(os.path.join(params_path[instrument][fx], row['target_file']), idx, n_total_clips, fx)
+
+        input_target_pairs[idx] = (audio_in, audio_target)
+        
+    return input_target_pairs
+    
+def load_model(model_path, dropout):
+    nlfx = NonLinearFXModel(params_data=params_data, params_train=params_train, dropout=dropout, dropout_rate=0.3, dnn=True)
+    model = nlfx.build()
+    opt = Adam(lr=params_train['lr'])
+    model.compile(optimizer=opt, loss='mae', metrics=['mae'])
+    model.load_weights(os.path.join(model_path, 'supervised_model.h5'))
+    return model
     
 def get_plot(inputWave, targetWave, outputWave, fs, plotName):
     # Plot the audio signal in time
