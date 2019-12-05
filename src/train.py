@@ -3,7 +3,7 @@ import time
 import datetime
 
 from meta import *
-from utils import load_audio, get_input_target_fname_pairs
+from utils import load_audio, get_input_target_fname_pairs, get_model_path
 from model.DataGenerator import DataGenerator
 from model.NonLinearFXModel import NonLinearFXModel
 
@@ -134,7 +134,7 @@ def train_unsupervised(instrument, fx, param_setting, dropout, out_path):
     save_model(model, out_path, 'unsupervised_model')
     return model, nlfx, train_pairs, val_pairs
 
-def train_supervised(model, nlfx, train_pairs, val_pairs):
+def train_supervised(model, nlfx, train_pairs, val_pairs, out_path):
     
     def get_layer_index(model, layer_name):
         index = None
@@ -169,18 +169,12 @@ def train_supervised(model, nlfx, train_pairs, val_pairs):
     save_model(model, out_path, 'supervised_model')
     return model
 
-out_path = '/import/c4dm-04/cv/models/guitar_distortion_1_2/'
-unsupervised_model, nlfx, train_pairs, val_pairs = train_unsupervised(instrument=GUITAR, fx=DISTORTION, param_setting=fx_param_ids[0], dropout=True, out_path=out_path)
+instrument = BASS
+for fx in [DISTORTION, OVERDRIVE]:
+    for idx in fx_param_ids:
+        for model_num in [1, 2]:
+            out_path = get_model_path(instrument, fx, idx, model_num=model_num)
+            dropout = model_num == 2
+            unsupervised_model, nlfx, train_pairs, val_pairs = train_unsupervised(instrument=instrument, fx=fx, param_setting=idx, dropout=dropout, out_path=out_path)
 
-# out_path = '/import/c4dm-04/cv/models/guitar_distortion_1_2/'
-
-# dropout = True
-# nlfx = NonLinearFXModel(params_data=params_data, params_train=params_train, dropout=True, dropout_rate=0.3)
-# model = nlfx.build()
-# opt = Adam(lr=params_train['lr'])
-# model.compile(optimizer=opt, loss='mae', metrics=['mae'])
-# model.load_weights(os.path.join(out_path, 'unsupervised_model.h5'))
-
-# train_pairs, val_pairs = load_data(instrument=GUITAR, fx=DISTORTION, param_setting=fx_param_ids[0], out_path=out_path)
-
-supervised_model = train_supervised(unsupervised_model, nlfx, train_pairs, val_pairs)
+            train_supervised(unsupervised_model, nlfx, train_pairs, val_pairs, out_path)
