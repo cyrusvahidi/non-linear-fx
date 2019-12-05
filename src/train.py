@@ -3,9 +3,11 @@ import time
 import datetime
 
 from meta import *
-from utils import *
+from utils import load_audio, get_input_target_fname_pairs
 from model.DataGenerator import DataGenerator
 from model.NonLinearFXModel import NonLinearFXModel
+
+import numpy as np
 
 import tensorflow as tf
 from tensorflow.keras import backend as K
@@ -42,9 +44,7 @@ def save_test_data(input_target_file_pairs, out_path):
 def load_data(instrument, fx, param_setting, out_path):
     input_target_file_pairs = get_input_target_fname_pairs(instrument, fx, param_setting)
     
-#     train_file_pairs = save_test_data(input_target_file_pairs, out_path)
-    train_file_pairs = input_target_file_pairs
-#     import pdb; pdb.set_trace()
+    train_file_pairs = save_test_data(input_target_file_pairs, out_path)
 
     input_target_pairs = load_audio_pairs(instrument, fx, param_setting, train_file_pairs)
 

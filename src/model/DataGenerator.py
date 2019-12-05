@@ -28,6 +28,9 @@ class DataGenerator(Sequence):
     def __len__(self):
 #         return self.n_iterations
         return self.n_iterations
+
+    def get_frames(self):
+        return self.input_frames, self.target_frames
     
     def on_epoch_end(self):
         # shuffle data between epochs
@@ -84,7 +87,6 @@ class DataGenerator(Sequence):
             start += self.hop_size
             idx += 1
                               
-        
     def get_num_frames_per_clip(self, audio_clip):
         # get the number of frames for given clip
         n_samples = audio_clip.shape[0]
