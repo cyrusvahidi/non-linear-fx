@@ -66,3 +66,6 @@ def get_target_files(f_id, fx_path):
 
 def get_dir_files(path):
     return os.listdir(path)
+
+def get_model_path(instrument, fx, fx_param_id, model_num):
+    return os.path.join(meta.path_models, '{4}_{0}_{1}_{2}_{3}/'.format(instrument, fx, fx_param_id, model_num))

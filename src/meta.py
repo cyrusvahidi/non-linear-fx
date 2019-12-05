@@ -32,3 +32,5 @@ params_path = {
         OVERDRIVE: os.path.join(path_root, 'guitar/Overdrive/')
     }
 }
+
+path_models = '/import/c4dm-04/cv/models/'

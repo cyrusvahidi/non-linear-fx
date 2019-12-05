@@ -5,7 +5,7 @@ from scipy import signal
 
 import os
 from meta import *
-from utils import load_audio
+from utils import load_audio, get_model_path
 
 from model.DataGenerator import DataGenerator
 
@@ -14,7 +14,7 @@ def load_test_data(model_path, instrument, fx):
     n_total_clips = test_df.shape[0]
     input_target_pairs =  [0] * n_total_clips
     for idx, row in test_df.iterrows():
-        audio_in = load_audio(os.path.join(params_path[instrument][NO_FX], row['input_file']), idx, n_total_clips, NO_FX)
+        audio_in = load_audio(os.path.join(params_path[instrument][NO_FX], row['input_file']), idx, n_total_clips, meta.NO_FX)
         audio_target = load_audio(os.path.join(params_path[instrument][fx], row['target_file']), idx, n_total_clips, fx)
 
         input_target_pairs[idx] = (audio_in, audio_target)
@@ -119,8 +119,10 @@ def get_plot(inputWave, targetWave, outputWave, fs, plotName):
 
 
 # SCRIPT
-model_path = '/import/c4dm-04/cv/models/guitar_distortion_1_2/'
+# model_path = '/import/c4dm-04/cv/models/guitar_distortion_1_2/'
+model_path = get_model_path(meta.GUITAR, meta.DISTORTION, meta.fx_param_ids[0], model_num=2)
 dropout = True # True if model_path ends in 2, else False
+
 
 # Generate input target frame pairs
 input_target_pairs = load_test_data(model_path, GUITAR, DISTORTION)
