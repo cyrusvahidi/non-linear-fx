@@ -51,6 +51,14 @@ class DePool1D(UpSampling1D):
         f = T.grad(T.sum(self._pool1d_layer.get_output(train)), wrt=self._pool1d_layer.get_input(train)) * output
 
         return f
+    
+#     def get_config(self):
+#         config = {
+#             '_pool1d_layer': self._pool1d_layer
+#         }
+#         base_config = super(DePool1D, self).get_config()
+        
+#         return dict(list(base_config.items()) + list(config.items()))
 
 class Deconvolution1D(Layer):
 #     input_ndim = 4
@@ -74,14 +82,13 @@ class Deconvolution1D(Layer):
         return (input_shape[0], 1, input_shape[2], 1)
     
 class Conv1DLocal(Layer):
-    def __init__(self, n_kernels=128, kernel_size=128, activation='softplus', data_format='channels_last', 
+    def __init__(self, n_kernels=128, kernel_size=128, data_format='channels_last', 
                  kernel_initializer='random_uniform', kernel_regularizer=regularizers.l2(0.01), kernel_constraint=None,
                  use_bias=True, bias_initializer='random_uniform', bias_regularizer=regularizers.l2(0.01), bias_constraint=None, 
                  **kwargs):
         self.rank               = 1
         self.n_kernels          = n_kernels
         self.kernel_size        = normalize_tuple(kernel_size, self.rank,'kernel_size')
-        self.activation         = activation
         self.data_format        = data_format
         self.kernel_initializer = kernel_initializer
         self.kernel_regularizer = kernel_regularizer
@@ -138,6 +145,23 @@ class Conv1DLocal(Layer):
         X = K.concatenate(X, axis=2)
 
         return X
+    
+#     def get_config(self):
+#         config = {
+#             'rank': self.rank,
+#             'n_kernels': self.n_kernels,
+#             'kernel_size': self.kernel_size,
+#             'data_format': self.data_format,
+#             'use_bias': self.use_bias,
+#             'kernel_initializer': initializers.serialize(self.kernel_initializer),
+#             'bias_initializer': initializers.serialize(self.bias_initializer),
+#             'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
+#             'bias_regularizer': regularizers.serialize(self.bias_regularizer),
+#             'kernel_constraint': constraints.serialize(self.kernel_constraint),
+#             'bias_constraint': constraints.serialize(self.bias_constraint)
+#         }
+#         base_config = super(Conv1DLocal, self).get_config()
+#         return dict(list(base_config.items()) + list(config.items()))
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0], input_shape[1], self.n_kernels)
@@ -234,7 +258,7 @@ class SAAF(Layer):
         b2ks = [0] * x.shape[0]
         for i in range(x.shape[0]):
             b2ks[i] = tf.cond(tfm.logical_and(tfm.greater(x[i, 0], k_1), tfm.less(x[i, 0], k)), lambda: f1(), lambda: f2())
-            print(b2ks[i].shape)
+#             print(b2ks[i].shape)
         
         b_2_k = K.concatenate(b2ks)
 #         if tfm.greater(x, k_1) and tfm.less(x, k):
@@ -244,13 +268,12 @@ class SAAF(Layer):
         return tfm.multiply(self.w[self.i][self.k - 1], b_2_k)
     
 class DenseLocal(Layer):
-    def __init__(self, units=64, n_kernels=128, activation='softplus',
+    def __init__(self, units=64, n_kernels=128,
                  kernel_initializer='random_uniform', kernel_regularizer=regularizers.l2(0.01), kernel_constraint=None,
                  use_bias=True, bias_initializer='random_uniform', bias_regularizer=regularizers.l2(0.01), bias_constraint=None, 
                  **kwargs):
         self.units              = int(units)
         self.n_kernels          = n_kernels
-        self.activation         = activation
         self.kernel_initializer = kernel_initializer
         self.kernel_regularizer = kernel_regularizer
         self.kernel_constraint  = kernel_constraint
@@ -304,6 +327,21 @@ class DenseLocal(Layer):
         X = K.concatenate(X, axis=1)
 
         return X
+    
+#     def get_config(self):
+#         config = {
+#             'units': self.units,
+#             'n_kernels': self.n_kernels,
+#             'use_bias': self.use_bias,
+#             'kernel_initializer': initializers.serialize(self.kernel_initializer),
+#             'bias_initializer': initializers.serialize(self.bias_initializer),
+#             'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
+#             'bias_regularizer': regularizers.serialize(self.bias_regularizer),
+#             'kernel_constraint': constraints.serialize(self.kernel_constraint),
+#             'bias_constraint': constraints.serialize(self.bias_constraint)
+#         }
+#         base_config = super(DenseLocal, self).get_config()
+#         return dict(list(base_config.items()) + list(config.items()))
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0], input_shape[1], input_shape[2])
