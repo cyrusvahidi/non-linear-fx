@@ -131,3 +131,4 @@ input_frames, target_frames = data_gen.get_frames()
 
 model = load_model(model_path, dropout=dropout)
 preds = model.predict(input_frames)
+mae = model.evaluate(input_frames, target_frames)
