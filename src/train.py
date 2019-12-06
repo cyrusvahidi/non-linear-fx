@@ -169,12 +169,23 @@ def train_supervised(model, nlfx, train_pairs, val_pairs, out_path):
     save_model(model, out_path, 'supervised_model')
     return model
 
-instrument = BASS
+instrument = GUITAR
+# for fx in [DISTORTION, OVERDRIVE]:
+#     for idx in fx_param_ids:
+#         for model_num in [1, 2]:
+#             out_path = get_model_path(instrument, fx, idx, model_num=model_num)
+#             dropout = model_num == 2
+#             unsupervised_model, nlfx, train_pairs, val_pairs = train_unsupervised(instrument=instrument, fx=fx, param_setting=idx, dropout=dropout, out_path=out_path)
+
+#             train_supervised(unsupervised_model, nlfx, train_pairs, val_pairs, out_path)
+            
 for fx in [DISTORTION, OVERDRIVE]:
     for idx in fx_param_ids:
-        for model_num in [1, 2]:
+        for model_num in [1]:
+            print('Training {0}, {1}, param {2}, model {3}'.format(instrument, fx, idx, model_num))
             out_path = get_model_path(instrument, fx, idx, model_num=model_num)
             dropout = model_num == 2
             unsupervised_model, nlfx, train_pairs, val_pairs = train_unsupervised(instrument=instrument, fx=fx, param_setting=idx, dropout=dropout, out_path=out_path)
 
             train_supervised(unsupervised_model, nlfx, train_pairs, val_pairs, out_path)
+            print('Training COMPLETE: {0}, {1}, param {2}, model {3}'.format(instrument, fx, idx, model_num))
