@@ -119,10 +119,13 @@ def get_plot(inputWave, targetWave, outputWave, fs, plotName):
 
 
 # SCRIPT
-# model_path = '/import/c4dm-04/cv/models/guitar_distortion_1_2/'
-model_path = get_model_path(meta.GUITAR, meta.DISTORTION, meta.fx_param_ids[0], model_num=2)
-dropout = True # True if model_path ends in 2, else False
+instrument = meta.GUITAR
+fx         = meta.DISTORTION
+param_id   = meta.fx_param_ids[0]
+model_num  = 2
+dropout = model_num == 2 
 
+model_path = get_model_path(instrument, fx, param_id, model_num=model_num)
 
 # Generate input target frame pairs
 input_target_pairs = load_test_data(model_path, GUITAR, DISTORTION)
@@ -130,5 +133,5 @@ data_gen = DataGenerator(input_target_pairs, floatx=np.float32, batch_size=param
 input_frames, target_frames = data_gen.get_frames()
 
 model = load_model(model_path, dropout=dropout)
-preds = model.predict(input_frames)
-mae = model.evaluate(input_frames, target_frames)
+preds = model.predict(input_frames) # get model output frames
+mae = model.evaluate(input_frames, target_frames) # get mae over output frames
