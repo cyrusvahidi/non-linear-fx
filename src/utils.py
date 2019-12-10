@@ -11,6 +11,7 @@ def load_audio(path, idx=None, total=None, fx=None):
     else:
         print('loading {0}'.format(path))
     audio, _ = librosa.load(path, sr=meta.params_data['fs'], mono=meta.params_data['mono'])
+#     audio = normalize_audio(audio)
 #     audio, _ = librosa.effects.trim(audio) # remove leading and trailing silences
     audio = audio.T
     audio = np.reshape(audio, [-1, 1])
@@ -19,9 +20,9 @@ def load_audio(path, idx=None, total=None, fx=None):
 def normalize_audio(audio):
     mean = np.mean(audio)
     audio -= mean
-    max = max(abs(audio))
+    maximum = max(abs(audio))
 
-    return audio / max
+    return audio / maximum
 
 def get_input_target_fname_pairs(instrument=meta.BASS, effect=meta.DISTORTION, fx_param_id=meta.fx_param_ids[0]):
     audio_ids = get_file_audio_ids(meta.params_path[instrument][meta.NO_FX])
@@ -29,6 +30,14 @@ def get_input_target_fname_pairs(instrument=meta.BASS, effect=meta.DISTORTION, f
     return [(fname, target) for target in os.listdir(meta.params_path[instrument][effect]) 
                             for (fname, f_prefix) in audio_ids 
                             if get_fname_param_id(target).endswith(fx_param_id) and target.startswith(f_prefix)]
+
+def get_fxchain_fname_pairs(instrument=meta.BASS, param_setting='1'):
+    audio_ids = get_file_audio_ids(meta.params_path[meta.FXCHAIN][instrument][meta.NO_FX])
+    
+    return [(fname, target) for target in os.listdir(meta.params_path[meta.FXCHAIN][instrument][param_setting])
+                            for (fname, f_prefix) in audio_ids
+                            if target.startswith(f_prefix)
+           ]
 
 def get_file_audio_ids(path):
     ''' Get the file id in the first half of the file name.
@@ -81,3 +90,7 @@ def overlap_sum(input, nstep):
         norm[i*nstep:i*nstep+nperseg] += win**2
     #x /= np.where(norm > 1e-10, norm, 1.0)
     return x
+
+def get_model_path(instrument, fx, fx_param_id, model_num):
+    return os.path.join(meta.path_models, '{0}_{1}_{2}_{3}/'.format(instrument, fx, fx_param_id, model_num))
+
