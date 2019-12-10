@@ -7,12 +7,13 @@ data:
   suffix: '.wav'
   separator: '-'
 train:
-  lr: 0.01
+  lr: 0.0001
   batch: 32
   iterations: 1000
-  n_epochs: 100
+  n_epochs: 50
+  n_epochs_supervised: 50
   optim: Adam
-  patience: 15
+  patience: 25
   val_split: 0.1
   test_split: 0.2
 

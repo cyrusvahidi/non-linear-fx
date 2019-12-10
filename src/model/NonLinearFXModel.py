@@ -3,7 +3,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras import backend as K
 from tensorflow.keras.regularizers import l2 
 
-from model.layers import DePool1D, Deconvolution1D, Conv1DLocal, DenseLocal, SAAF
+from model.layers import DePool1D, Deconvolution1D, Conv1DLocal, DenseLocal, SAAF, PTanh
 
 import tensorflow as tf
 
@@ -112,7 +112,7 @@ class NonLinearFXModel():
               kernel_regularizer=l2(1e-3),
               activation='tanh',
               name='saaf-fc4')(x)
-#         x = SAAF()(x) # TODO: locally connected SAAF activation
+#         x = PTanh()(x) # TODO: locally connected SAAF activation
 
         if self.dropout:
             x = Dropout(self.dropout_rate)(x)

@@ -380,3 +380,44 @@ def normalize_tuple(value, n, name):
                                  'of type {}'.format(name, n, value, single_value,
                                                      type(single_value)))
     return value_tuple
+
+class PTanh(Layer):
+    def __init__(self, alpha_initializer='zeros', **kwargs):
+        
+        self.alpha_initializer = alpha_initializer
+        
+        super().__init__(**kwargs)
+        
+    def build(self, input_shape):
+        assert len(input_shape) >= 2
+        super(PTanh, self).build(input_shape)  # Be sure to call this at the end
+
+        input_dim = input_shape[-1]
+        
+        self.n_activations = input_dim
+
+        self.alphas = [0] * self.n_activations
+        param_shape = list((input_shape[1], 1))
+        
+        for i in range(self.n_activations):
+            self.alphas[i] = self.add_weight(
+                                    'ptan-{0}'.format(i),
+                                    shape=(1, ),
+                                    initializer=self.alpha_initializer)
+                
+        self.built = True
+        
+    def call(self, x):
+        rank = len(x.shape)
+        X = [0] * x.shape[-1]
+        
+        for i in range(self.n_activations):
+          # Broadcasting is required for the inputs.
+            X[i] = tfm.tanh(tfm.multiply(self.alphas[i], x[:,:,i:i+1]))
+
+        X = K.concatenate(X, axis=2)
+
+        return X
+
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0], input_shape[1], input_shape[2])
