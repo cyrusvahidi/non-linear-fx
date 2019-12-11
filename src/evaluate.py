@@ -36,9 +36,9 @@ def load_test_data(model_path, instrument, fx, param_id):
     return input_target_pairs
     
 def load_model(model_path, dropout, unsupervised=False):
-    use_dnn = not unsupervised
+    supervised = not unsupervised
     model_fname = 'supervised_model' if not unsupervised else 'unsupervised_model'
-    nlfx = NonLinearFXModel(params_data=meta.params_data, params_train=meta.params_train, dropout=dropout, dropout_rate=0.3, dnn=use_dnn)
+    nlfx = NonLinearFXModel(params_data=meta.params_data, params_train=meta.params_train, dropout=dropout, dropout_rate=0.3, supervised=supervised)
     model = nlfx.build()
     opt = Adam(lr=meta.params_train['lr'])
     model.compile(optimizer=opt, loss='mae', metrics=['mae'])
@@ -140,18 +140,23 @@ def main():
     param_id   = meta.fx_param_ids[0]
     model_num  = 2
     dropout = model_num == 2 
+    unsupervised = True
 
     model_path = get_model_path(instrument, fx, param_id, model_num=model_num)
 
     # Generate input target frame pairs
     input_target_pairs = load_test_data(model_path, instrument, fx, param_id)
+    
+    if unsupervised:
+        input_target_pairs = [(input_clip, input_clip) for (input_clip, target_clip) in input_target_pairs]
+    
     data_gen = DataGenerator(input_target_pairs, floatx=np.float32, batch_size=meta.params_train['batch'], frame_size=meta.params_data['frame_size'], hop_size=meta.params_data['hop_size'], unsupervised=False)
     input_frames, target_frames = data_gen.get_frames()
 
     data_gen_single = DataGenerator([input_target_pairs[0]], floatx=np.float32, batch_size=meta.params_train['batch'], frame_size=meta.params_data['frame_size'], hop_size=meta.params_data['hop_size'], unsupervised=False)
     input_frame, target_frame = data_gen_single.get_frames()
 
-    model = load_model(model_path, dropout=dropout)
+    model = load_model(model_path, dropout=dropout, unsupervised=unsupervised)
 
     preds = model.predict(input_frames) # get model output frames
     mae = model.evaluate(input_frames, target_frames) # get mae over output frames

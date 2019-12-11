@@ -13,7 +13,7 @@ train:
   n_epochs: 50
   n_epochs_supervised: 50
   optim: Adam
-  patience: 25
-  val_split: 0.1
+  patience: 20
+  val_split: 0.1111111111111115
   test_split: 0.2
 

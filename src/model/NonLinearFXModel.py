@@ -8,12 +8,12 @@ from model.layers import DePool1D, Deconvolution1D, Conv1DLocal, DenseLocal, SAA
 import tensorflow as tf
 
 class NonLinearFXModel():
-    def __init__(self, params_data=None, params_train=None, dropout=True, dropout_rate=0.5, dnn=False):
+    def __init__(self, params_data=None, params_train=None, dropout=True, dropout_rate=0.5, supervised=False):
         self.params_data = params_data
         self.params_train = params_train
         self.dropout = dropout
         self.dropout_rate = dropout_rate
-        self.dnn = dnn
+        self.supervised = supervised
         
         self.build()
         
@@ -28,13 +28,13 @@ class NonLinearFXModel():
         self.w1 = Conv1D(filters=128, kernel_size=64,
                    activation='linear',
                    padding='same',
-                   kernel_initializer='random_uniform',
+                   kernel_initializer='he_normal',
                    name='conv1')
             
         self.mp = MaxPool1D(pool_size=16, name='max_pool')
         
         z = self.frontend(x)
-        if self.dnn:
+        if self.supervised:
             z = self.latent_dnn(z)
         y = self.backend(z)
         
@@ -55,20 +55,29 @@ class NonLinearFXModel():
         
         return x
     
+    def unpool(self, x):
+        x = DePool1D(self.mp, size=16, name='depool')(x)
+        return x
+    
+    def backend_supervised(self, x, X1):
+        # residual connection - element-wise multiply residual and X2
+        x = multiply([x, X1])
+
+        x = self.dnn_saaf(x) 
+        return x
+    
     def backend(self, x):
         #     x = UpSampling1D(size=16)(x)
-        x = DePool1D(self.mp, size=16, name='depool')(x)
+        x = self.unpool(x)
 
-        # residual connection - element-wise multiply residual and X2
-        x = multiply([x, self.X1])
+        if self.supervised:
+            x = self.backend_supervised(x, self.X1)
 
-        x = self.dnn_saaf(x)
-
-        # DECONVOLUTION
-        x = ZeroPadding1D((32, 31))(x) # zero pad the time series before doing 1d convolution
+            # DECONVOLUTION
+        x = ZeroPadding1D((32, 31), name='zero_padding_deconv')(x) # zero pad the time series before doing 1d convolution
         x = Permute((2, 1), input_shape=(1024, 128))(x)
         x = Lambda(lambda x: K.expand_dims(x, axis=3))(x) # add dimension to input for 1d conv
-        
+
         kernel = Lambda(lambda x: K.transpose(x))(self.w1.kernel) # transpose kernel
         kernel = Lambda(lambda x: K.permute_dimensions(x, (0, 2, 1)))(kernel) # switch kernel dimensions up
         kernel = Lambda(lambda x: K.expand_dims(x, axis=3))(kernel) # add dimension to the kernel
@@ -84,35 +93,43 @@ class NonLinearFXModel():
     def dnn_saaf(self, x):
         # dnn saaf - 4 FC LAYERS 128 64, 64 - SOFTPLUS, 128 - locally connected SAAF
         x = Dense(128,
-              kernel_initializer='random_uniform',
+              kernel_initializer='he_normal',
               kernel_regularizer=l2(1e-3),
+              bias_initializer='zeros', 
+              bias_regularizer=l2(0.01),
               activation='softplus',
               name='saaf-fc1')(x)
         if self.dropout:
             x = Dropout(self.dropout_rate)(x)
 
         x = Dense(64,
-              kernel_initializer='random_uniform',
+              kernel_initializer='he_normal',
               kernel_regularizer=l2(1e-3),
+              bias_initializer='zeros', 
+              bias_regularizer=l2(0.001),
               activation='softplus',
               name='saaf-fc2')(x)
         if self.dropout: 
             x = Dropout(self.dropout_rate)(x)
 
         x = Dense(64,
-              kernel_initializer='random_uniform',
+              kernel_initializer='he_normal',
               kernel_regularizer=l2(1e-3),
+              bias_initializer='zeros', 
+              bias_regularizer=l2(0.001),
               activation='softplus',
               name='saaf-fc3')(x)
         if self.dropout:
             x = Dropout(self.dropout_rate)(x)
 
         x = Dense(128,
-              kernel_initializer='random_uniform',
+              kernel_initializer='he_normal',
               kernel_regularizer=l2(1e-3),
-              activation='tanh',
+              bias_initializer='zeros', 
+              bias_regularizer=l2(0.001),
+#               activation='tanh',
               name='saaf-fc4')(x)
-#         x = PTanh()(x) # TODO: locally connected SAAF activation
+        x = PTanh()(x) # TODO: locally connected SAAF activation
 
         if self.dropout:
             x = Dropout(self.dropout_rate)(x)
@@ -126,8 +143,10 @@ class NonLinearFXModel():
             Z = Dropout(self.dropout_rate)(Z)
             
         Z = Dense(64,
-              kernel_initializer='random_uniform',
+              kernel_initializer='he_normal',
               kernel_regularizer=l2(1e-3),
+              bias_initializer='zeros', 
+              bias_regularizer=l2(0.001),
               activation='softplus',
               name='dnn-2')(Z)
         if self.dropout:

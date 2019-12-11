@@ -134,14 +134,14 @@ def train_supervised(model, nlfx, train_pairs, val_pairs, out_path):
 
     # insert latent DNN layers into trained model
     layers = [l for l in model.layers]
-    idx = get_layer_index(model, 'max_pool')
-    latent_dnn = nlfx.latent_dnn(model.layers[idx].output)
-    x = latent_dnn
-    for i in range(idx + 1, len(layers)):
-        if layers[i].name.startswith('multiply'): # handle case where we hit multiply layer 
-            x = layers[i]([x, model.get_layer('conv1').output])
-        else:
-            x = layers[i](x)
+
+    idx_deconv = get_layer_index(model, 'zero_padding_deconv')
+    idx_pool = get_layer_index(model, 'max_pool')
+    latent_dnn = nlfx.latent_dnn(model.layers[idx_pool].output)
+    x = model.get_layer('depool')(latent_dnn)
+    x = nlfx.backend_supervised(x, model.get_layer('conv1').output)
+    for i in range(idx_deconv, len(layers)):
+        x = layers[i](x)
 
     model = Model(inputs=layers[0].input, outputs=x)
     opt = Adam(lr=params_train['lr'])

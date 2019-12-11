@@ -8,7 +8,7 @@ import tensorflow.keras.backend as K
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2DTranspose, Lambda, Layer
 from tensorflow.keras.activations import softplus
-from tensorflow.keras import regularizers
+from tensorflow.keras import regularizers, initializers
 
 import math
 import numpy as np
@@ -83,8 +83,8 @@ class Deconvolution1D(Layer):
     
 class Conv1DLocal(Layer):
     def __init__(self, n_kernels=128, kernel_size=128, data_format='channels_last', 
-                 kernel_initializer='random_uniform', kernel_regularizer=regularizers.l2(0.01), kernel_constraint=None,
-                 use_bias=True, bias_initializer='random_uniform', bias_regularizer=regularizers.l2(0.01), bias_constraint=None, 
+                 kernel_initializer='random_uniform', kernel_regularizer=regularizers.l2(0.001), kernel_constraint=None,
+                 use_bias=True, bias_initializer='zeros', bias_regularizer=regularizers.l2(0.001), bias_constraint=None, 
                  **kwargs):
         self.rank               = 1
         self.n_kernels          = n_kernels
@@ -269,8 +269,8 @@ class SAAF(Layer):
     
 class DenseLocal(Layer):
     def __init__(self, units=64, n_kernels=128,
-                 kernel_initializer='random_uniform', kernel_regularizer=regularizers.l2(0.01), kernel_constraint=None,
-                 use_bias=True, bias_initializer='random_uniform', bias_regularizer=regularizers.l2(0.01), bias_constraint=None, 
+                 kernel_initializer='he_normal', kernel_regularizer=regularizers.l2(0.001), kernel_constraint=None,
+                 use_bias=True, bias_initializer='zeros', bias_regularizer=regularizers.l2(0.001), bias_constraint=None, 
                  **kwargs):
         self.units              = int(units)
         self.n_kernels          = n_kernels
@@ -382,7 +382,7 @@ def normalize_tuple(value, n, name):
     return value_tuple
 
 class PTanh(Layer):
-    def __init__(self, alpha_initializer='zeros', **kwargs):
+    def __init__(self, alpha_initializer=initializers.Ones(), **kwargs):
         
         self.alpha_initializer = alpha_initializer
         
