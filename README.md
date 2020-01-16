@@ -1,5 +1,5 @@
 # Reimplementation of Modeling Nonlinear Audio Effects with End-to-end Deep Neural Networks 
-Implementation of [Modeling Nonlinear Audio Effects with End-to-end Deep Neural Networks.](https://ieeexplore.ieee.org/abstract/document/8683529/). [Official research implementation](https://github.com/mchijmma/DL-AFx) by [Marco Martínez](https://github.com/mchijmma)
+Implementation of [Modeling Nonlinear Audio Effects with End-to-end Deep Neural Networks.](https://ieeexplore.ieee.org/abstract/document/8683529/) [Original work](https://github.com/mchijmma/DL-AFx) by [Marco Martínez](https://github.com/mchijmma)
 
 ## Requirements
 `Python 3.6.6`
