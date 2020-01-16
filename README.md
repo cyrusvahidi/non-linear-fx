@@ -1,4 +1,4 @@
-# non-linear-fx
+# Reimplementation of Modeling Nonlinear Audio Effects with End-to-end Deep Neural Networks 
 Implementation of [https://ieeexplore.ieee.org/abstract/document/8683529/](Modeling Nonlinear Audio Effects with End-to-end Deep Neural Networks.) by Marco Martinez. [https://github.com/mchijmma/DL-AFx](Original Implementation) @ https://github.com/mchijmma
 
 ## Requirements
