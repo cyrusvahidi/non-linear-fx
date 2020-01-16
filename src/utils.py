@@ -1,6 +1,7 @@
 import librosa
 import numpy as np
 import os
+from scipy import signal
 
 import meta
 
@@ -75,6 +76,20 @@ def get_target_files(f_id, fx_path):
 
 def get_dir_files(path):
     return os.listdir(path)
+
+def overlap_sum(input, nstep):
+    nperseg = input.shape[1]
+    nseg = input.shape[0]
+    outputlength = nperseg + (nseg-1)*nstep
+    x = np.zeros(outputlength)
+    norm = np.zeros(outputlength)
+    win = signal.windows.hann(nperseg)
+    
+    for i in range(nseg):
+        x[i*nstep:i*nstep+nperseg] += input[i]*win
+        norm[i*nstep:i*nstep+nperseg] += win**2
+    #x /= np.where(norm > 1e-10, norm, 1.0)
+    return x
 
 def get_model_path(instrument, fx, fx_param_id, model_num):
     return os.path.join(meta.path_models, '{0}_{1}_{2}_{3}/'.format(instrument, fx, fx_param_id, model_num))
