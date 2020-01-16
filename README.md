@@ -1,12 +1,14 @@
 # non-linear-fx
-Implementation of Modelling non-linear audio effects with end-to-end deep learning.
+Implementation of [https://ieeexplore.ieee.org/abstract/document/8683529/](Modeling Nonlinear Audio Effects with End-to-end Deep Neural Networks.) by Marco Martinez. [https://github.com/mchijmma/DL-AFx](Original Implementation) @ https://github.com/mchijmma
 
 ## Requirements
 `Python 3.6.6`
 `CUDNN`
+`keras 2.1.6`
+`tensorflow-gpu 1.12.0`
 
 ## bash config
-For a consisent environment configuration, add the following to your `~/.bashrc` on the GPU server and run the command `source ~/.bashrc`.
+For a consisent environment configuration, add the following to your `~/.bashrc`
 
 ```
 module load python/3.6.6
@@ -16,10 +18,7 @@ export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda-10.0/lib64
 
 module load cuda/10.0-cudnn7.4.2
 
-export CUDA_VISIBLE_DEVICES=0,1,2,3
+export CUDA_VISIBLE_DEVICES=0
 ```
 
-Essentially, this loads the cudnn library for tensorflow / torch and declares available GPUs for use.
-
-## python virtual environment
-Instructions coming soon for how to create a python virtual environment and which python packages to install.
+WIP 
