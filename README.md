@@ -2,7 +2,7 @@
 Experimental implementation of [Modeling Nonlinear Audio Effects with End-to-end Deep Neural Networks.](https://ieeexplore.ieee.org/abstract/document/8683529/) [Original work](https://github.com/mchijmma/DL-AFx) by [Marco Martínez](https://github.com/mchijmma)
 
 
-# WARNING
+# Notice
 This repository is incomplete. It was a reimplementation before the release of Marco's journal paper and accompanying code for all of the end-to-end analog audio effect models:  https://github.com/mchijmma/DL-AFx
 
 ### TODO
